@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import scipy.linalg as sp
 eps = 0.05
 a = 1.001
-D = 0.02
+D = 0.0002
 sigma = 0.4
-R = 100
+R = 60
 N = 500
 Phi = np.pi/2-0.1
-Tmax = 100
+Tmax = 500
 dt = 0.01
 def fhnderiv(u):
 	us = u[:,0]
@@ -23,7 +23,7 @@ def fhnderiv(u):
 	return du
 
 u = np.array([[2*np.cos(T),2*np.sin(T)] for T in np.random.rand(N)*2*np.pi])
-T = np.arange(0,Tmax,dt)
+T = np.arange(0,Tmax+dt,dt)
 print T
 uv = np.zeros((len(T),u.shape[0],u.shape[1]))
 uv[0] = u
@@ -44,6 +44,7 @@ for i in xrange(len(T)-1):
 	newu[:,1] = uv[i,:,1] +dt*deriv[:,1] + np.sqrt(dt*2*D)*rand
 	uv[i+1]=newu
 	print T[i]
-showing = uv[-500:,:,0]
-plt.imshow(showing, origin = "lower")
+plt.imshow(uv[-500:,:,0], origin = "lower")
+plt.show()
+plt.imshow(uv[:500,:,0], origin = "lower")
 plt.show()
