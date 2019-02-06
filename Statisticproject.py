@@ -1,23 +1,28 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.linalg as sp
+import pickle
+
 eps = 0.05
 a = 1.001
 D = 0.0001
 sigma = 0.4
+sigma2 = 0.4
 N = 500
 R = int(N*0.12)
 Phi = np.pi/2-0.1
 Tmax = 100
 dt = 0.01
 dz = 25
+Multiplex = True
+
 def fhnderiv(u):
 	us = u[:,0]
 	vs = u[:,1]
 	udifs = (us-us[:,np.newaxis])
 	vdifs = (vs - vs[:,np.newaxis])
-	udifs *= sigma/(2*R)*Rangetrix
-	vdifs *= sigma/(2*R)*Rangetrix
+	udifs *= Rangetrix
+	vdifs *= Rangetrix
 	du = np.zeros_like(u)
 	du[:,0] = (us-us**3/3.-vs + buu*udifs.sum(axis=1)+buv*vdifs.sum(axis=1))/eps
 	du[:,1] = us + a + bvu*udifs.sum(axis=1)+buu*vdifs.sum(axis=1)
@@ -25,9 +30,7 @@ def fhnderiv(u):
 
 def Calcnewuv(uv,dt):
 	uv += fhnderiv(uv)*dt
-	uv[:,1]+=np.sqrt(2*D*dt)*np.random.standard_normal(N)
-	if i*dt%1==0:
-		print i*dt
+	uv[:N,1]+=np.sqrt(2*D*dt)*np.random.standard_normal(N)
 	return uv
 
 def Order(u,dz):
@@ -38,6 +41,8 @@ def Order(u,dz):
 	dummy[len(index)-index<=dz] = 1
 	Rangetrix = sp.circulant(dummy)
 	del dummy, index
+	if Multiplex == True:
+		Rangetrix = np.bmat([[Rangetrix,np.zeros((N,N))],[np.zeros((N,N)),Rangetrix]]).A
 	Z = np.exp(1j*Phis)
 	Z = np.array([np.dot(Rangetrix, Vector) for Vector in Z])
 	Z /= (2*dz+1)
@@ -45,35 +50,46 @@ def Order(u,dz):
 	return Z
 
 u = np.array([[2*np.cos(T),2*np.sin(T)] for T in np.random.rand(N)*2*np.pi])
+if Multiplex == True:
+	u = np.array([[2*np.cos(T),2*np.sin(T)] for T in np.random.rand(2*N)*2*np.pi])
 T = np.arange(0,Tmax+dt,dt)
-print T
 uv = np.zeros((len(T),u.shape[0],u.shape[1]))
-uv[-1] = u
-print uv
+uv[0] = u
 buu = np.cos(Phi)
 buv = np.sin(Phi)
 bvu = np.sin(-Phi)
-dummy = np.zeros(len(u[:]))
-index  = np.arange(len(u[:]))
+dummy = np.zeros(N)
+index  = np.arange(N)
 dummy[index<=R] = 1
 dummy[len(index)-index<=R] = 1
 Rangetrix = sp.circulant(dummy)
 del dummy, index
+if Multiplex == True:
+	Rangetrix = np.bmat([[sigma/(2*R)*Rangetrix,sigma2*np.eye(N)],[sigma2*np.eye(N),sigma/(2*R)*Rangetrix]]).A
 for i in xrange(len(T)-1):
 	uv[i+1]=Calcnewuv(uv[i],dt)
 	if T[i]%1.==0:
 		print T[i]
-#"""
+
 Z = Order(uv[-int(20/dt):], dz)
-plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax))
+#"""
+plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
+plt.title("Z")
+plt.colorbar()
 plt.show()
-plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax))
+#plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
+#plt.title("uglobal")
+#plt.colorbar()
+#plt.show()
+plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
+plt.title("lastfewu")
+plt.colorbar()
 plt.show()
-plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-plt.show()
-plt.imshow(uv[:500,:,0], origin = "lower", aspect = "auto")
+plt.imshow(uv[:500,:,0], origin = "lower", aspect = "auto", cmap = "jet")
 plt.show()
 #"""
+#with open("Chimeralotsotime.pickle","wb") as f:
+#	pickle.dump(uv,f)
 """
 fig = plt.figure()
 ax1 = fig.add_subplot(221)
@@ -82,20 +98,19 @@ ax3 = fig.add_subplot(223)
 ax4 = fig.add_subplot(224)
 pic1 = ax1.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
 pic2 = ax2.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-D = 0.0002
-""
-for i in xrange(len(T)-1):
-	deriv = fhnderiv(uv[i])
-	rand = np.random.standard_normal(N)
-	uv[i+1] += uv[i]+dt*deriv
-	uv[i+1,:,1] += np.sqrt(dt*2*D)*rand
-#	newu[:,0] = uv[i,:,0]+dt*deriv[:,0]
-#	newu[:,1] = uv[i,:,1] +dt*deriv[:,1] + np.sqrt(dt*2*D)*rand
-	print T[i]
-Z = Order(uv, dz)
-plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
+"""
+#D = 0.0002
+#for i in xrange(len(T)-1):
+#	uv[i+1]=Calcnewuv(uv[i],dt)
+#	if T[i]%1.==0:
+#		print T[i]
+#Z = Order(uv, dz)
+#with open("bullshitlotsotime.pickle","wb") as f:
+#	pickle.dump(uv[-int(20/dt):],f)
+"""
+pic3 = ax3.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
+pic4 = ax4.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
+fig.colorbar(pic1,ax = ax3, orientation="horizontal", pad = 0.2)
+fig.colorbar(pic2, ax = ax4, orientation="horizontal", pad=0.2)
 plt.show()
-plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-plt.show()
-#"""
-#"""
+"""
