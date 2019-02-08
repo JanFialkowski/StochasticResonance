@@ -1,18 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.linalg as sp
+from scipy.integrate import odeint
 import pickle
 
 eps = 0.05
 a = 1.001
 D = 0.0001
 sigma = 0.4
-sigma2 = 0.01
+sigma2 = 0.0005
 N = 500
 R = int(N*0.12)
 Phi = np.pi/2-0.1
-Tmax = 500
-dt = 0.001
+Tmax = 100
+dt = 0.01
 dz = 25
 Multiplex = True
 
@@ -21,11 +22,15 @@ def fhnderiv(u):
 	vs = u[:,1]
 	udifs = (us-us[:,np.newaxis])
 	vdifs = (vs - vs[:,np.newaxis])
-	udifs *= Rangetrix
-	vdifs *= Rangetrix
+	udifs[:N,:N] *= Rangetrix[:N,:N]
+	vdifs[:N,:N] *= Rangetrix[:N,:N]
+	udifs[N:,N:] *= Rangetrix[N:,N:]
+	vdifs[N:,N:] *= Rangetrix[N:,N:]
 	du = np.zeros_like(u)
-	du[:,0] = (us-us**3/3.-vs + buu*udifs.sum(axis=1)+buv*vdifs.sum(axis=1))/eps
-	du[:,1] = us + a + bvu*udifs.sum(axis=1)+buu*vdifs.sum(axis=1)
+	du[:N,0] = (us[:N]-us[:N]**3/3.-vs[:N] + buu*udifs[:N,:N].sum(axis=1)+buv*vdifs[:N,:N].sum(axis=1)+np.diagonal(udifs[N:,:N]*sigma2))/eps
+	du[N:,0] = (us[N:]-us[N:]**3/3.-vs[N:] + buu*udifs[N:,N:].sum(axis=1)+buv*vdifs[N:,N:].sum(axis=1)+np.diagonal(udifs[:N,N:]*sigma2))/eps
+	du[N:,1] = us[N:] + a + bvu*udifs[N:,N:].sum(axis=1)+buu*vdifs[N:,N:].sum(axis=1)
+	du[:N,1] = us[:N] + a + bvu*udifs[:N,:N].sum(axis=1)+buu*vdifs[:N,:N].sum(axis=1)
 	return du
 
 def Calcnewuv(uv,dt):
@@ -66,51 +71,28 @@ Rangetrix = sp.circulant(dummy)
 del dummy, index
 if Multiplex == True:
 	Rangetrix = np.bmat([[sigma/(2*R)*Rangetrix,sigma2*np.eye(N)],[sigma2*np.eye(N),sigma/(2*R)*Rangetrix]]).A
-for i in xrange(len(T)-1):
-	uv[i+1]=Calcnewuv(uv[i],dt)
-	if T[i]%1.==0:
-		print T[i]
+do=True
+while do:
+	for i in xrange(len(T)-1):
+		uv[i+1]=Calcnewuv(uv[i],dt)
+		if T[i] == 50:
+			do = np.argwhere(uv[int(30/dt):,N+N/2,0]>1.5).any()
+			print np.argwhere(uv[int(30/dt):,N+N/2,0]>1.5)
+			print np.argwhere(uv[int(30/dt):,N+N/2,0]>1.5).any()
+		if T[i]%1.==0:
+			print T[i]
+	do = False
 
-#Z = Order(uv[-int(20/dt):], dz)
-"""
-plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
-plt.title("Z")
-plt.colorbar()
-plt.show()
-#plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
-#plt.title("uglobal")
-#plt.colorbar()
-#plt.show()
 plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
 plt.title("lastfewu")
 plt.colorbar()
 plt.show()
-plt.imshow(uv[:500,:,0], origin = "lower", aspect = "auto", cmap = "jet")
+plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
+plt.title("uglobal")
+plt.colorbar()
 plt.show()
-"""
-with open("Duplex.pickle","wb") as f:
-	pickle.dump(uv,f)
-"""
-fig = plt.figure()
-ax1 = fig.add_subplot(221)
-ax2 = fig.add_subplot(222)
-ax3 = fig.add_subplot(223)
-ax4 = fig.add_subplot(224)
-pic1 = ax1.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-pic2 = ax2.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-"""
-#D = 0.0002
-#for i in xrange(len(T)-1):
-#	uv[i+1]=Calcnewuv(uv[i],dt)
-#	if T[i]%1.==0:
-#		print T[i]
-#Z = Order(uv, dz)
-#with open("bullshitlotsotime.pickle","wb") as f:
-#	pickle.dump(uv[-int(20/dt):],f)
-"""
-pic3 = ax3.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-pic4 = ax4.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax))
-fig.colorbar(pic1,ax = ax3, orientation="horizontal", pad = 0.2)
-fig.colorbar(pic2, ax = ax4, orientation="horizontal", pad=0.2)
+Z = Order(uv[-int(20/dt):], dz)
+plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
+plt.title("Z")
+plt.colorbar()
 plt.show()
-"""
