@@ -8,12 +8,12 @@ eps = 0.05
 a = 1.001
 D = 0.0001
 sigma = 0.4
-sigma2 = 0.0005
+sigma2 = 0.01
 N = 500
 R = int(N*0.12)
 Phi = np.pi/2-0.1
-Tmax = 100
-dt = 0.01
+Tmax = 200
+dt = 0.001
 dz = 25
 Multiplex = True
 
@@ -82,17 +82,20 @@ while do:
 		if T[i]%1.==0:
 			print T[i]
 	do = False
-
-plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
+"""
+plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N*(1+Multiplex),Tmax-20,Tmax), cmap = "jet")
 plt.title("lastfewu")
 plt.colorbar()
 plt.show()
-plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
+plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N*(1+Multiplex),0,Tmax), cmap = "jet")
 plt.title("uglobal")
 plt.colorbar()
 plt.show()
 Z = Order(uv[-int(20/dt):], dz)
-plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
+plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N*(1+Multiplex),Tmax-20,Tmax), cmap = "jet")
 plt.title("Z")
 plt.colorbar()
 plt.show()
+"""
+with open("UCoupling001.pickle","wb") as f:
+	pickle.dump(uv[::10],f)

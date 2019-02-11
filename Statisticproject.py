@@ -7,11 +7,11 @@ eps = 0.05
 a = 1.001
 D = 0.0001
 sigma = 0.4
-sigma2 = 0.01
+sigma2 = 0.1
 N = 500
 R = int(N*0.12)
 Phi = np.pi/2-0.1
-Tmax = 500
+Tmax = 200
 dt = 0.001
 dz = 25
 Multiplex = True
@@ -71,16 +71,16 @@ for i in xrange(len(T)-1):
 	if T[i]%1.==0:
 		print T[i]
 
-#Z = Order(uv[-int(20/dt):], dz)
 """
+Z = Order(uv[-int(20/dt):], dz)
 plt.imshow(Z[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
 plt.title("Z")
 plt.colorbar()
 plt.show()
-#plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
-#plt.title("uglobal")
-#plt.colorbar()
-#plt.show()
+plt.imshow(uv[:,:,0], origin = "lower", aspect = "auto", extent = (0,N,0,Tmax), cmap = "jet")
+plt.title("uglobal")
+plt.colorbar()
+plt.show()
 plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
 plt.title("lastfewu")
 plt.colorbar()
@@ -88,8 +88,8 @@ plt.show()
 plt.imshow(uv[:500,:,0], origin = "lower", aspect = "auto", cmap = "jet")
 plt.show()
 """
-with open("Duplex.pickle","wb") as f:
-	pickle.dump(uv,f)
+with open("HCoupling01.pickle","wb") as f:
+	pickle.dump(uv[::10],f)
 """
 fig = plt.figure()
 ax1 = fig.add_subplot(221)

@@ -24,21 +24,9 @@ def Order(u,dz):
 	Z = np.abs(Z)
 	return Z
 
-with open("Chimera.pickle","rb") as f:
-	uv = pickle.load(f)[0]
-fig = plt.figure()
-ax1 = fig.add_subplot(221)
-ax2 = fig.add_subplot(222)
-ax3 = fig.add_subplot(223)
-ax4 = fig.add_subplot(224)
-pic1 = ax1.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
-uv = Order(uv,dz)
-pic2 = ax2.imshow(uv[-int(20/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
-with open("bullshitlotsotime.pickle","rb") as f:
+with open("UCoupling0001.pickle","rb") as f:
 	uv = pickle.load(f)
-pic3 = ax3.imshow(uv[-int(200/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
-uv = Order(uv,dz)
-pic4 = ax4.imshow(uv[-int(200/dt):,:], origin = "lower", aspect = "auto", extent = (0,N,Tmax-20,Tmax), cmap = "jet")
-fig.colorbar(pic1,ax = ax3, orientation="horizontal", pad = 0.2)
-fig.colorbar(pic2, ax = ax4, orientation="horizontal", pad=0.2)
+
+plt.imshow(uv[-int(20/dt):,:,0], origin = "lower", aspect = "auto", extent = (0,2*N,Tmax-20,Tmax), cmap = "jet")
+plt.colorbar()
 plt.show()
